@@ -2,7 +2,9 @@ import os
 import urllib
 import urllib2
 from urllib2 import URLError
+from socket import error as SocketError
 import hashlib
+import time
 
 class HeadRequest(urllib2.Request):
     def get_method(self):
@@ -11,6 +13,7 @@ class HeadRequest(urllib2.Request):
 def getResourceLength(url):
     try:
         response = urllib2.urlopen(HeadRequest(url))
+        time.sleep(0.5)
         if response.info().getheader('Content-Length'):
 		    return response.info().getheader('Content-Length')
         else:
@@ -26,9 +29,9 @@ def getSha256(filename):
     f.close()
     return mysha256.hexdigest()
 
-fid = open("./faceScrub/facescrub_actors.txt", "r")
-log = open("./faceScrub/log.txt", "wt")
-list = open('./faceScrub/list.txt', 'wt')
+fid = open('./faceScrub/facescrub_actors.txt', 'r')
+log = open('./faceScrub/log_actors.txt', 'wt')
+list = open('./faceScrub/list_actors.txt', 'wt')
 line = fid.readline()
 count = 1
 while line:
