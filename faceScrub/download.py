@@ -11,7 +11,10 @@ class HeadRequest(urllib2.Request):
 def getResourceLength(url):
     try:
         response = urllib2.urlopen(HeadRequest(url))
-        return response.info().getheader('Content-Length')
+        if response.info().getheader('Content-Length'):
+		    return response.info().getheader('Content-Length')
+        else:
+            return ''
     except:
         print 'url error...\n'
         return ''
