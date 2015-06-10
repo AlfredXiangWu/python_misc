@@ -12,13 +12,8 @@ def getResourceLength(url):
     try:
         response = urllib2.urlopen(HeadRequest(url))
         return response.info().getheader('Content-Length')
-    except URLError, e:
-        if hasattr(e,'reason'):
-            print 'cannot reach a server..\n'
-        elif hasattr(e,'code'):
-            print 'find http error..\n.'
-        else:
-            print 'unkown error...\n'
+    except:
+        print 'url error...\n'
         return ''
 
 def getSha256(filename):
