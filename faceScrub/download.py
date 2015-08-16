@@ -1,37 +1,23 @@
-import os
-import urllib
-import urllib2
-from urllib2 import URLError
-from socket import error as SocketError
-import hashlib
+import threading
 import time
+import urllib
+import os
 
-class HeadRequest(urllib2.Request):
-    def get_method(self):
-        return "HEAD"
 
-def getResourceLength(url):
+def download_image(url, save_name):
     try:
-        response = urllib2.urlopen(HeadRequest(url))
-        time.sleep(0.5)
-        if response.info().getheader('Content-Length'):
-		    return response.info().getheader('Content-Length')
-        else:
-            return ''
-    except:
-        print 'url error...\n'
-        return ''
+        urlopen = urllib.URLopener()
+        fp = urlopen.open(url)
+        data = fp.read()
+        fp.close()
 
-def getSha256(filename):
-    f = open(filename, 'rb')
-    mysha256 = hashlib.sha256()
-    mysha256.update(f.read())
-    f.close()
-    return mysha256.hexdigest()
+        print url + ' downloading...'
+        fid = open(save_name, 'w+b')
+        fid.write(data)
+    except IOError:
+        print url + 'downloading error...'
 
 fid = open('./faceScrub/facescrub_actors.txt', 'r')
-log = open('./faceScrub/log_actors.txt', 'wt')
-list = open('./faceScrub/list_actors.txt', 'wt')
 line = fid.readline()
 count = 1
 while line:
@@ -39,6 +25,7 @@ while line:
     tmp = line.split("\t")
     file = tmp[0]
     file = file.replace(' ', '_')
+    image_id = tmp[1]
     url = tmp[3]
     fr = tmp[4]
     tmp_url = url.split('.')
@@ -48,26 +35,10 @@ while line:
     if not os.path.exists(file_path):
         os.mkdir(file_path)
         count = 1
-    response = getResourceLength(url)
-    if len(response):
-        image_path = file_path+'/'+file+str(count)+'.'+tmp_url[-1]
-        print url + ' downloading...'
-        urllib.urlretrieve(url, image_path)
-        count = int(count) + 1
-        img_sha256 = getSha256(image_path)
-        if img_sha256 == sha256:
-            print url + ' download success..\n'
-            list.write(image_path + ' ' + fr + '\n')
-            log.write(url + ' download success..\n')
-        else:
-            print url + ' download error..\n'
-            log.write(url + ' download error..\n')
-    else:
-        print url+ ' not exit..'
-        log.write(url + ' not exit..\n')
-		
-list.close()
-log.close()
+    image_path = file_path+'/'+file+image_id+'.'+tmp_url[-1]
+    count = int(count) + 1
+    download_image(url, image_path)
+
 fid.close()
 
 
