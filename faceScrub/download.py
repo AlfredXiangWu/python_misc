@@ -1,13 +1,13 @@
 import threading
 import time
-import urllib
+import urllib2
 import os
 
 
 def download_image(url, save_name):
     try:
-        urlopen = urllib.URLopener()
-        fp = urlopen.open(url)
+        fp = urllib2.urlopen(url, timeout=120)
+
         data = fp.read()
         fp.close()
 
@@ -17,7 +17,7 @@ def download_image(url, save_name):
     except IOError:
         print url + 'downloading error...'
 
-fid = open('./faceScrub/facescrub_actors.txt', 'r')
+fid = open('./faceScrub/facescrub_actresses.txt', 'r')
 line = fid.readline()
 count = 1
 while line:
@@ -35,7 +35,7 @@ while line:
     if not os.path.exists(file_path):
         os.mkdir(file_path)
         count = 1
-    image_path = file_path+'/'+file+image_id+'.'+tmp_url[-1]
+    image_path = file_path+'/'+file+'_'+image_id+'.'+tmp_url[-1]
     count = int(count) + 1
     download_image(url, image_path)
 
