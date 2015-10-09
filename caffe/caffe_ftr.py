@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Name:        caffe_ftr
+# Purpose:
+#
+# Author:      wuhao
+#
+# Created:     14/07/2014
+# Copyright:   (c) wuhao 2014
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 from collections import OrderedDict
 import gzip
 import zipfile
@@ -6,9 +17,10 @@ import time
 
 import numpy as np
 import scipy.io as sio
+import skimage.io
 import os
 
-caffe_root = '/home/wuxiang/caffe-rc/caffe/'
+caffe_root = '/home/wuxiang/caffe/'
 
 import sys
 sys.path.insert(0, caffe_root + 'python')
@@ -132,11 +144,15 @@ def extract_feature(network_proto_path,
     img_batch = []
     for cnt, path in zip(range(features_shape[0]), image_list):
         img = caffe.io.load_image(path, color = not image_as_grey)
+        if image_as_grey and img.shape[2] != 1:
+            img = skimage.color.rgb2gray(img)
+            img = img[:, :, np.newaxis]
         if cnt == 0:
             print 'image shape: ', img.shape
         #print img[0:10,0:10,:]
         #exit()
         img_batch.append(img)
+        #print 'image shape: ', img.shape
         #print path, type(img), img.mean()
         if (len(img_batch) == batch_size) or cnt==features_shape[0]-1:
             scores = net.predict(img_batch, oversample=False)
@@ -230,6 +246,75 @@ def labels_list_to_float(labels):
     print labels_float
     '''
     return labels_float
+
+'''
+extract_features_to_mat('DeepFace.prototxt', 'DeepFace_iter_30000',
+                        '/home/wkira/share/data/MBGC64', 'caffe_110_list.txt',
+                        'fc4', 'MBGC-110-deep1-1.mat')
+'''
+
+'''
+extract_features_to_mat('DeepFace.prototxt', 'DeepFace_iter_30000',
+                        '/home/wkira/share/data/norm-lfw-64', 'caffe_list_full.txt',
+                        'fc4', 'LFW.mat')
+'''
+
+#--------------------
+'''
+
+img_list = load_image_list('/home/wkira/share/data/MBGC64', 'caffe_110_list.txt')
+#print img_list
+#exit()
+ftr = extract_feature('deep1.prototxt', 'deep1_iter_14000', img_list, None, 'ip1')
+'''
+
+#---------------------
+'''
+ftr = extract_feature(['deep1.prototxt', 'deep1_iter_14000'],
+                ['/home/wkira/share/data/MBGC64/034703.bmp',
+                 '/home/wkira/share/data/MBGC64/034702.bmp',
+                 '/home/wkira/share/data/MBGC64/034701.bmp'],
+                'ip1', './')
+'''
+#----------------------
+'''
+print 'blobs:'
+print [(k, v.data.shape) for k, v in net.blobs.items()]
+print 'params:'
+print [(k, v[0].data.shape) for k, v in net.params.items()]
+print type(net.blobs)
+print type(net.params)
+'''
+#----------------------
+'''
+blobs = []
+for k,v in net.blobs.items():
+    bl = v
+    bl_dic = {'channels':bl.channels, 'count':bl.count, 'height':bl.height,
+         'width':bl.width, 'name':bl.name, 'num':bl.num, 'data':bl.data,
+         'diff':bl.diff}
+    blobs.append((k,bl_dic))
+params = net.params.items()
+prm = params[0][1]
+print type(prm[2])
+exit()
+for k,v in net.params.items():
+    prm_dic = {}
+
+blobs = [(k, v) for k, v in net.blobs.items()]
+blob = blobs[0][1]
+print dir(blob)
+
+bldata = blob.data
+print type(bldata)
+bldiff = blob.diff
+print type(bldiff)
+
+
+net_save_file = 'net.pkl'
+dic = {'blobs': blobs, 'params': params}
+pickle(net_save_file, dic, compress=True)
+'''
 
 def save_filters(network_def, network_model, save_path):
     #print 'arg1', network_def
