@@ -1,21 +1,40 @@
 import os
+import sys
 import urllib2
+import socks
+import socket
 import httplib
-
 import multiprocessing
+from sockshandler import SocksiPyHandler
+
 
 def download_image(url, save_name):
 	try:
-		fp = urllib2.urlopen(url, timeout=20)
+		fp = ''
+		if proxy is True:
+			## 更换了代理方式
+			opener = urllib2.build_opener(SocksiPyHandler(socks.SOCKS5, "127.0.0.1", 9999))
+			fp = opener.open(url,timeout=40)
+		else:
+			fp = urllib2.urlopen(url, timeout=40)
+
 		data = fp.read()
 		fp.close()
 
 		print url + ' downloading...'
 		fid = open(save_name, 'w+b')
 		fid.write(data)
-		flag = True 
+		flag = True
+
+		######### 此处应该判断文件的大小，如果有md5也需要校验md5
+		flsize = os.path.getsize(save_name)
+		print 'file size:%d ' % flsize
+		if flsize < 10:
+			flag = False
+		######
 	except Exception:
-		print url + ' downloading io error...'
+		######## 此处加了显示错误信息是啥sys.exc_info()[0]，别忘了import sys
+		print url + ' downloading io error...       ' ,sys.exc_info()[0]
 		flag = False
 	return flag
 
@@ -38,10 +57,22 @@ def readList((list_path, save_path, log_path)):
 		# skip the existing images
 		if os.path.exists(filename):
 			print filename + ' is already downloaded..'
+			####此处加了readline
+			line = fid.readline()
 			continue
 
-		flag = download_image(url, filename)
+		flag = download_image(url, filename, None)
+		#########  这里应该判断flag，如果有问题，那么重新下载，不然才记录
+		retrytimes = 1
+		while flag is False:
+			flag = download_image(url, filename,True)
+			print 'retry times:%d' % retrytimes
+			retrytimes = retrytimes + 1
+			if retrytimes > 5:
+				break
+			
 		if not flag:
+			print filename + ' failed\n'
 			fid_log.write(line)
 			#raw_input();
 		line = fid.readline()
@@ -67,6 +98,7 @@ def readPath(list_dir, save_dir, log_dir):
 	pool.close()
 	pool.join()
 	
+
 
 
 if __name__ == "__main__":
