@@ -9,9 +9,9 @@ def readRoc(path):
     return result
 
 def writeResult(fid, result):
-    for acc in result:
-        fid.write(acc + '\t')
-    fid.write('\n')
+    for i in range(0, 6):
+        fid.write(result[i] + '\t')
+    fid.write(result[6] + '\n')
 
 def main(argv):
     cmd_str     = argv[0]
